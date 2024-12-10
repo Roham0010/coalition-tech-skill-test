@@ -10,7 +10,7 @@
 
 <body>
 	<div class="container bg-light h-100">
-		<form id="productForm mt-3">
+		<form id="productForm" class=" pt-3">
 			<div class="form-group w-50 mt-2">
 				<label class="form-label" for="name">Product Name</label>
 				<input type="text" class="form-control" id="name" required>
@@ -50,5 +50,39 @@
 		</div>
 	</div>
 </body>
+<script>
+	document.addEventListener('DOMContentLoaded', function() {
+		// Form submission
+		document.getElementById('productForm').addEventListener('submit', function(e) {
+			e.preventDefault();
+
+			const name = document.getElementById('name').value;
+			const quantity = document.getElementById('quantity').value;
+			const price = document.getElementById('price').value;
+
+			fetch('save.php', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({
+						name,
+						quantity,
+						price
+					})
+				}).then(response => response.json())
+				.then(data => {
+					if (data.status === 'success') {
+						// load data
+						document.getElementById('productForm').reset();
+					} else {
+						// error
+						console.log('error', data);
+					}
+				})
+				.catch(error => console.error('Error:', error));
+		});
+	});
+</script>
 
 </html>
