@@ -53,37 +53,9 @@
 <script>
 	document.addEventListener('DOMContentLoaded', function() {
 		loadData();
+		let idToUpdate = '';
 
-		// Load data function
-		function loadData() {
-			fetch('data.json')
-				.then(response => response.json())
-				.then(data => {
-					meta = data.meta;
-					let totalSum = meta.total_value;
-					let rows = '';
-					for (const id in data.products) {
-						if (data.products.hasOwnProperty(id)) {
-							const product = data.products[id];
-							const totalValue = product.quantity * product.price;
-							rows += `<tr data-id="${id}">
-                                        <td>${product.name}</td>
-                                        <td>${product.quantity}</td>
-                                        <td>${product.price}</td>
-                                        <td>${product.date}</td>
-                                        <td>${totalValue.toFixed(2)}</td>
-                                        <td>edit</td>
-                                    </tr>`;
-						}
-					}
-					document.getElementById('productTableBody').innerHTML = rows;
-					document.getElementById('sumTotal').textContent = `$${totalSum.toFixed(2)}`;
-				})
-				.catch(error => console.error('Error:', error));
-		}
-
-		// Form submission
-		document.getElementById('productForm').addEventListener('submit', function(e) {
+		let handleAdd = function(e) {
 			e.preventDefault();
 
 			const name = document.getElementById('name').value;
@@ -103,7 +75,7 @@
 				}).then(response => response.json())
 				.then(data => {
 					if (data.status === 'success') {
-						// load data
+						loadData();
 						document.getElementById('productForm').reset();
 					} else {
 						// error
@@ -111,7 +83,91 @@
 					}
 				})
 				.catch(error => console.error('Error:', error));
-		});
+		}
+		document.getElementById('productForm').addEventListener('submit', handleAdd);
+
+		let handleUpdate = function(e) {
+			e.preventDefault();
+			const name = document.getElementById('name').value;
+			const quantity = document.getElementById('quantity').value;
+			const price = document.getElementById('price').value;
+
+			fetch('update.php', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({
+						id: idToUpdate,
+						name: name,
+						quantity: quantity,
+						price: price
+					})
+				})
+				.then(response => response.json())
+				.then(data => {
+					if (data.status === 'success') {
+						loadData();
+						idToUpdate = '';
+						document.getElementById('productForm').reset();
+						document.getElementById('productForm').removeEventListener('submit', handleUpdate);
+						document.getElementById('productForm').addEventListener('submit', handleAdd);
+					} else {
+						console.log('error', data);
+					}
+				})
+				.catch(error => console.error('Error:', error));
+		}
+
+		let editButtonsListener = function() {
+			document.querySelectorAll('.edit-btn').forEach(button => {
+				button.addEventListener('click', function() {
+					const row = this.closest('tr');
+					idToUpdate = row.dataset.id;
+					const name = row.children[0].textContent;
+					const quantity = row.children[1].textContent;
+					const price = row.children[2].textContent;
+
+					document.getElementById('name').value = name;
+					document.getElementById('quantity').value = quantity;
+					document.getElementById('price').value = price;
+
+					document.getElementById('productForm').removeEventListener('submit', handleAdd);
+					document.getElementById('productForm').addEventListener('submit', handleUpdate);
+				});
+			});
+		}
+		// Load data function
+		function loadData() {
+			fetch('data.json')
+				.then(response => response.json())
+				.then(data => {
+					meta = data.meta;
+					let totalSum = meta.total_value;
+					let rows = '';
+					for (const id in data.products) {
+						if (data.products.hasOwnProperty(id)) {
+							const product = data.products[id];
+							const totalValue = product.quantity * product.price;
+							rows += `<tr data-id="${id}">
+												<td>${product.name}</td>
+												<td>${product.quantity}</td>
+												<td>${product.price}</td>
+												<td>${product.date}</td>
+												<td>${totalValue.toFixed(2)}</td>
+												<td>
+													<button class="btn btn-sm btn-primary edit-btn">Edit</button>
+												</td>
+											</tr>`;
+						}
+					}
+					document.getElementById('productTableBody').innerHTML = rows;
+					document.getElementById('sumTotal').textContent = `$${totalSum.toFixed(2)}`;
+
+					editButtonsListener();
+				})
+				.catch(error => console.error('Error:', error));
+		}
 	});
 </script>
 
