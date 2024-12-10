@@ -52,6 +52,36 @@
 </body>
 <script>
 	document.addEventListener('DOMContentLoaded', function() {
+		loadData();
+
+		// Load data function
+		function loadData() {
+			fetch('data.json')
+				.then(response => response.json())
+				.then(data => {
+					meta = data.meta;
+					let totalSum = meta.total_value;
+					let rows = '';
+					for (const id in data.products) {
+						if (data.products.hasOwnProperty(id)) {
+							const product = data.products[id];
+							const totalValue = product.quantity * product.price;
+							rows += `<tr data-id="${id}">
+                                        <td>${product.name}</td>
+                                        <td>${product.quantity}</td>
+                                        <td>${product.price}</td>
+                                        <td>${product.date}</td>
+                                        <td>${totalValue.toFixed(2)}</td>
+                                        <td>edit</td>
+                                    </tr>`;
+						}
+					}
+					document.getElementById('productTableBody').innerHTML = rows;
+					document.getElementById('sumTotal').textContent = `$${totalSum.toFixed(2)}`;
+				})
+				.catch(error => console.error('Error:', error));
+		}
+
 		// Form submission
 		document.getElementById('productForm').addEventListener('submit', function(e) {
 			e.preventDefault();
